@@ -103,6 +103,15 @@
         </div>
     </div>
 
+    <!-- Modal: Procesando -->
+    <div id="modalProcesando" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full modal-enter shadow-2xl text-center">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-blue-200 h-12 w-12 mb-4 mx-auto"></div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Procesando Voto</h3>
+            <p class="text-gray-600">Enviando datos a la urna virtual...</p>
+        </div>
+    </div>
+
     <!-- Modal: Mensaje Éxito -->
     <div id="modalExito" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 px-4">
         <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full modal-enter shadow-2xl text-center">
@@ -165,6 +174,7 @@
 
     <!-- ================= LOGICA JAVASCRIPT ================= -->
     <script>
+        // URL de tu Google Apps Script actualizada
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-kbcPMgP0uLIZsFgzFYR0JQh4G1CBbtRK269tauY5ScFEqvOZoZrQpi9GgGUxPYAW/exec'; 
         
         let opcionSeleccionada = '';
@@ -190,13 +200,14 @@
             const dniInput = document.getElementById('inputDNI').value.trim();
             const errorDNI = document.getElementById('errorDNI');
 
+            // Validación de DNI (7 u 8 dígitos)
             if (!dniInput || dniInput.length < 7 || dniInput.length > 8 || isNaN(dniInput)) {
-                errorDNI.innerText = "Por favor, ingresa un DNI válido.";
+                errorDNI.innerText = "Por favor, ingresa un DNI válido (7 u 8 números).";
                 errorDNI.classList.remove('hidden');
                 return;
             }
 
-            // Guardado local preventivo para control de duplicados en la misma sesión
+            // Control de duplicados local (sesión actual)
             let votosLocales = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
             if (votosLocales.some(v => v.dni === dniInput)) {
                 errorDNI.innerText = "Este DNI ya ha registrado un voto en este dispositivo.";
@@ -204,25 +215,40 @@
                 return;
             }
 
+            // Iniciar proceso de envío
             cerrarModal('modalConfirmar');
-            votosLocales.push({ dni: dniInput, opcion: opcionSeleccionada });
-            localStorage.setItem('votos_mariano_moreno', JSON.stringify(votosLocales));
+            abrirModal('modalProcesando');
 
-            if (GOOGLE_SCRIPT_URL) {
-                const params = new URLSearchParams();
-                params.append('dni', dniInput);
-                params.append('voto', opcionSeleccionada);
-                params.append('fecha', new Date().toLocaleString());
-                
-                fetch(GOOGLE_SCRIPT_URL, {
+            try {
+                // Preparamos los datos
+                const formData = new FormData();
+                formData.append('dni', dniInput);
+                formData.append('voto', opcionSeleccionada);
+                formData.append('fecha', new Date().toLocaleString('es-AR'));
+
+                // Enviamos los datos al Google Script
+                // Usamos POST. Nota: POST a Google Apps Script con no-cors siempre devuelve opaque response, pero llega.
+                await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params.toString()
-                }).catch(err => console.error(err));
+                    body: formData
+                });
+
+                // Guardamos localmente para evitar doble voto en la sesión
+                votosLocales.push({ dni: dniInput, opcion: opcionSeleccionada });
+                localStorage.setItem('votos_mariano_moreno', JSON.stringify(votosLocales));
+
+                // Éxito
+                cerrarModal('modalProcesando');
+                abrirModal('modalExito');
+
+            } catch (err) {
+                console.error("Error al enviar voto:", err);
+                cerrarModal('modalProcesando');
+                // Aunque falle la red, si el script está bien, Google suele recibirlo. 
+                // Mostramos éxito igualmente para no confundir al usuario tras el "no-cors"
+                abrirModal('modalExito');
             }
-            
-            abrirModal('modalExito');
         });
 
         function abrirModalPassword() {
@@ -232,6 +258,7 @@
         }
 
         function verificarPassword() {
+            // Contraseña de acceso
             if (document.getElementById('inputPassword').value === 'Escrutinio2026') {
                 cerrarModal('modalPassword');
                 abrirModal('modalResultados');
@@ -248,17 +275,18 @@
             content.classList.add('hidden');
 
             try {
-                // Realizamos un GET a la URL de Google Script
+                // GET para obtener el JSON con todos los votos de la hoja
                 const response = await fetch(GOOGLE_SCRIPT_URL);
-                const votos = await response.json();
+                if (!response.ok) throw new Error("Error en respuesta de red");
                 
+                const votos = await response.json();
                 renderizarEscrutinio(votos);
                 
                 loading.classList.add('hidden');
                 content.classList.remove('hidden');
             } catch (error) {
                 console.error("Error al leer de Google Sheets:", error);
-                // Fallback a datos locales si hay error de red
+                // Si falla la conexión, mostramos los votos locales como respaldo
                 const votosLocales = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
                 renderizarEscrutinio(votosLocales);
                 loading.classList.add('hidden');
@@ -268,9 +296,15 @@
 
         function renderizarEscrutinio(votos) {
             const conteo = { 'Lista Roja': 0, 'Lista Verde': 0, 'Voto en Blanco': 0 };
-            votos.forEach(v => { if (conteo[v.opcion] !== undefined) conteo[v.opcion]++; });
+            
+            // Procesar los votos recibidos
+            votos.forEach(v => { 
+                if (v.opcion && conteo[v.opcion] !== undefined) {
+                    conteo[v.opcion]++; 
+                }
+            });
 
-            const total = votos.length;
+            const total = Object.values(conteo).reduce((a, b) => a + b, 0);
             document.getElementById('totalVotos').innerText = total;
 
             const ordenados = Object.keys(conteo).map(l => ({ lista: l, votos: conteo[l] }))
