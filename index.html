@@ -13,6 +13,14 @@
             from { opacity: 0; transform: scale(0.95) translateY(-10px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
+        .loader {
+            border-top-color: #3498db;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-between p-4 md:p-8">
@@ -134,13 +142,21 @@
                 </button>
             </div>
             
-            <div class="mb-6">
-                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-2">Total de votos emitidos:</p>
-                <p id="totalVotos" class="text-3xl font-black text-blue-600">0</p>
+            <!-- Estado de carga -->
+            <div id="loadingResults" class="flex flex-col items-center justify-center py-10">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+                <p class="text-gray-500">Obteniendo datos de Google Sheets...</p>
             </div>
 
-            <div id="contenedorResultados" class="space-y-4">
-                <!-- Los resultados se inyectan aquí con JS -->
+            <div id="contentResults" class="hidden">
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-2">Total de votos en la hoja:</p>
+                    <p id="totalVotos" class="text-3xl font-black text-blue-600">0</p>
+                </div>
+
+                <div id="contenedorResultados" class="space-y-4">
+                    <!-- Los resultados se inyectan aquí -->
+                </div>
             </div>
             
             <button onclick="cerrarModal('modalResultados')" class="w-full mt-8 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-xl transition-colors">Cerrar</button>
@@ -149,33 +165,24 @@
 
     <!-- ================= LOGICA JAVASCRIPT ================= -->
     <script>
-        // =========================================================================
-        // CONFIGURACIÓN DE GOOGLE SHEETS
-        // =========================================================================
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMsGKzkKhxVU0Z8vsKwmZ1hC3dZ0dSqxj8hTHiCB-N2u71WWb0j2k-J0MlMPmrGlgg/exec'; 
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-kbcPMgP0uLIZsFgzFYR0JQh4G1CBbtRK269tauY5ScFEqvOZoZrQpi9GgGUxPYAW/exec'; 
         
         let opcionSeleccionada = '';
 
-        // Funciones de control de Modales
         function abrirModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-        // Proceso de votación
         function confirmarVoto(opcion) {
             opcionSeleccionada = opcion;
             document.getElementById('opcionConfirmar').innerText = opcion;
-            
-            // Si es lista roja o verde, dar color al texto para mejor UX
             const spanConfirmar = document.getElementById('opcionConfirmar');
             spanConfirmar.className = 'font-bold ';
             if(opcion === 'Lista Roja') spanConfirmar.classList.add('text-red-600');
             else if(opcion === 'Lista Verde') spanConfirmar.classList.add('text-green-600');
             else spanConfirmar.classList.add('text-gray-600');
 
-            // Limpiar campo DNI al abrir el modal
             document.getElementById('inputDNI').value = '';
             document.getElementById('errorDNI').classList.add('hidden');
-
             abrirModal('modalConfirmar');
         }
 
@@ -183,61 +190,41 @@
             const dniInput = document.getElementById('inputDNI').value.trim();
             const errorDNI = document.getElementById('errorDNI');
 
-            // Validar DNI
             if (!dniInput || dniInput.length < 7 || dniInput.length > 8 || isNaN(dniInput)) {
-                errorDNI.innerText = "Por favor, ingresa un DNI válido (7 u 8 números).";
+                errorDNI.innerText = "Por favor, ingresa un DNI válido.";
                 errorDNI.classList.remove('hidden');
                 return;
             }
 
-            // Validar si el DNI ya votó localmente
-            let votos = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
-            if (votos.some(v => v.dni === dniInput)) {
-                errorDNI.innerText = "Este DNI ya ha registrado un voto.";
+            // Guardado local preventivo para control de duplicados en la misma sesión
+            let votosLocales = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
+            if (votosLocales.some(v => v.dni === dniInput)) {
+                errorDNI.innerText = "Este DNI ya ha registrado un voto en este dispositivo.";
                 errorDNI.classList.remove('hidden');
                 return;
             }
 
             cerrarModal('modalConfirmar');
-            
-            // 1. Guardado Local (Para que el escrutinio funcione inmediatamente sin el script de Google)
-            guardarVotoLocal(opcionSeleccionada, dniInput);
+            votosLocales.push({ dni: dniInput, opcion: opcionSeleccionada });
+            localStorage.setItem('votos_mariano_moreno', JSON.stringify(votosLocales));
 
-            // 2. Guardado en Google Sheets (Si la URL está configurada)
-            if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.trim() !== '') {
-                try {
-                    // FIX: Usar URLSearchParams asegura que Apps Script lea bien "e.parameter"
-                    const params = new URLSearchParams();
-                    params.append('dni', dniInput);
-                    params.append('voto', opcionSeleccionada);
-                    params.append('fecha', new Date().toLocaleString());
-                    
-                    fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: params.toString()
-                    }).catch(err => console.error("Error en la petición a Sheets:", err));
-                    
-                } catch (error) {
-                    console.error("Error al enviar a Google Sheets:", error);
-                }
-            } else {
-                console.warn("Atención: No has colocado la URL de Google Script.");
+            if (GOOGLE_SCRIPT_URL) {
+                const params = new URLSearchParams();
+                params.append('dni', dniInput);
+                params.append('voto', opcionSeleccionada);
+                params.append('fecha', new Date().toLocaleString());
+                
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                }).catch(err => console.error(err));
             }
             
             abrirModal('modalExito');
         });
 
-        function guardarVotoLocal(opcion, dni) {
-            let votos = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
-            votos.push({ dni: dni, opcion: opcion, fecha: new Date().toISOString() });
-            localStorage.setItem('votos_mariano_moreno', JSON.stringify(votos));
-        }
-
-        // Proceso de Escrutinio
         function abrirModalPassword() {
             document.getElementById('inputPassword').value = '';
             document.getElementById('errorPassword').classList.add('hidden');
@@ -245,59 +232,63 @@
         }
 
         function verificarPassword() {
-            const pwd = document.getElementById('inputPassword').value;
-            if (pwd === 'Escrutinio2026') {
+            if (document.getElementById('inputPassword').value === 'Escrutinio2026') {
                 cerrarModal('modalPassword');
-                generarEscrutinio();
+                abrirModal('modalResultados');
+                obtenerResultadosRemotos();
             } else {
                 document.getElementById('errorPassword').classList.remove('hidden');
             }
         }
 
-        function generarEscrutinio() {
-            // Obtenemos los votos locales
-            const votos = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
-            
-            // Conteo
-            const conteo = {
-                'Lista Roja': 0,
-                'Lista Verde': 0,
-                'Voto en Blanco': 0
-            };
+        async function obtenerResultadosRemotos() {
+            const loading = document.getElementById('loadingResults');
+            const content = document.getElementById('contentResults');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
 
-            votos.forEach(voto => {
-                if (conteo[voto.opcion] !== undefined) {
-                    conteo[voto.opcion]++;
-                }
-            });
+            try {
+                // Realizamos un GET a la URL de Google Script
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                const votos = await response.json();
+                
+                renderizarEscrutinio(votos);
+                
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+            } catch (error) {
+                console.error("Error al leer de Google Sheets:", error);
+                // Fallback a datos locales si hay error de red
+                const votosLocales = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
+                renderizarEscrutinio(votosLocales);
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+            }
+        }
+
+        function renderizarEscrutinio(votos) {
+            const conteo = { 'Lista Roja': 0, 'Lista Verde': 0, 'Voto en Blanco': 0 };
+            votos.forEach(v => { if (conteo[v.opcion] !== undefined) conteo[v.opcion]++; });
 
             const total = votos.length;
             document.getElementById('totalVotos').innerText = total;
 
-            // Ordenar de mayor a menor
-            const resultadosOrdenados = Object.keys(conteo).map(lista => {
-                return { lista: lista, votos: conteo[lista] };
-            }).sort((a, b) => b.votos - a.votos);
+            const ordenados = Object.keys(conteo).map(l => ({ lista: l, votos: conteo[l] }))
+                .sort((a, b) => b.votos - a.votos);
 
-            // Renderizar HTML
             const contenedor = document.getElementById('contenedorResultados');
             contenedor.innerHTML = '';
 
-            resultadosOrdenados.forEach((item, index) => {
+            ordenados.forEach((item, index) => {
                 let porcentaje = total === 0 ? 0 : Math.round((item.votos / total) * 100);
-                
-                // Colores dinámicos según la lista
-                let colorBarra = 'bg-gray-400';
-                let colorTexto = 'text-gray-700';
-                if (item.lista === 'Lista Roja') { colorBarra = 'bg-red-500'; colorTexto = 'text-red-700'; }
-                if (item.lista === 'Lista Verde') { colorBarra = 'bg-green-500'; colorTexto = 'text-green-700'; }
+                let colorBarra = item.lista === 'Lista Roja' ? 'bg-red-500' : (item.lista === 'Lista Verde' ? 'bg-green-500' : 'bg-gray-400');
+                let colorTexto = item.lista === 'Lista Roja' ? 'text-red-700' : (item.lista === 'Lista Verde' ? 'text-green-700' : 'text-gray-700');
+                let trofeo = index === 0 && item.votos > 0 ? '🏆' : '';
 
-                let trofeo = index === 0 && item.votos > 0 ? `<svg class="w-5 h-5 text-yellow-500 ml-2 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 01.832.445l2.454 3.75 4.384.637a1 1 0 01.554 1.706l-3.173 3.093.75 4.365a1 1 0 01-1.451 1.054L10 15.018l-3.92 2.062a1 1 0 01-1.45-1.054l.75-4.365-3.173-3.093a1 1 0 01.554-1.706l4.384-.637 2.454-3.75A1 1 0 0110 2z" clip-rule="evenodd"></path></svg>` : '';
-
-                const html = `
+                contenedor.innerHTML += `
                     <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
                         <div class="flex justify-between items-end mb-2">
-                            <span class="font-bold ${colorTexto} flex items-center">${item.lista} ${trofeo}</span>
+                            <span class="font-bold ${colorTexto}">${item.lista} ${trofeo}</span>
                             <span class="font-black text-xl text-gray-800">${item.votos} <span class="text-sm font-normal text-gray-500">votos</span></span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2.5">
@@ -306,10 +297,7 @@
                         <p class="text-right text-xs text-gray-500 mt-1">${porcentaje}%</p>
                     </div>
                 `;
-                contenedor.innerHTML += html;
             });
-
-            abrirModal('modalResultados');
         }
     </script>
 </body>
