@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elecciones 2026 - Colegio Dr. Mariano Moreno</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 md:p-8">
+
+    <!-- Encabezado -->
+    <header class="text-center w-full max-w-3xl mt-4 mb-8">
+        <div class="bg-blue-900 text-white p-6 rounded-2xl shadow-lg">
+            <h2 class="text-sm md:text-base font-semibold uppercase tracking-widest text-blue-200 mb-1">Colegio Secundario</h2>
+            <h1 class="text-2xl md:text-4xl font-extrabold mb-2">"Dr. Mariano Moreno"</h1>
+            <div class="h-1 w-20 bg-blue-400 mx-auto rounded-full my-4"></div>
+            <h3 class="text-xl md:text-2xl font-semibold">Elecciones Centro de Estudiantes 2026</h3>
+            <p class="text-blue-100 mt-2 text-sm">Selecciona tu opción para emitir el voto.</p>
+        </div>
+    </header>
+
+    <!-- Opciones de Votación -->
+    <main class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        
+        <!-- Lista Roja -->
+        <button onclick="confirmarVoto('Lista Roja')" class="group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-red-500 transform hover:-translate-y-1 focus:outline-none">
+            <div class="h-32 bg-red-600 flex items-center justify-center">
+                <svg class="w-16 h-16 text-white opacity-90 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </div>
+            <div class="p-6 text-center">
+                <h3 class="text-2xl font-bold text-gray-800">Lista Roja</h3>
+                <p class="text-gray-500 mt-2 text-sm">Haz clic para votar por la Lista Roja</p>
+            </div>
+        </button>
+
+        <!-- Lista Verde -->
+        <button onclick="confirmarVoto('Lista Verde')" class="group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-green-500 transform hover:-translate-y-1 focus:outline-none">
+            <div class="h-32 bg-green-500 flex items-center justify-center">
+                <svg class="w-16 h-16 text-white opacity-90 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </div>
+            <div class="p-6 text-center">
+                <h3 class="text-2xl font-bold text-gray-800">Lista Verde</h3>
+                <p class="text-gray-500 mt-2 text-sm">Haz clic para votar por la Lista Verde</p>
+            </div>
+        </button>
+
+        <!-- Voto en Blanco -->
+        <button onclick="confirmarVoto('Voto en Blanco')" class="group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-transparent hover:border-gray-400 transform hover:-translate-y-1 focus:outline-none">
+            <div class="h-32 bg-gray-200 flex items-center justify-center border-b border-gray-300">
+                <svg class="w-16 h-16 text-gray-500 opacity-90 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <div class="p-6 text-center">
+                <h3 class="text-2xl font-bold text-gray-800">Voto en Blanco</h3>
+                <p class="text-gray-500 mt-2 text-sm">Haz clic para votar en blanco</p>
+            </div>
+        </button>
+
+    </main>
+
+    <!-- Footer / Botón Escrutinio -->
+    <footer class="w-full text-center mt-auto pb-8">
+        <button onclick="abrirModalPassword()" class="text-gray-500 hover:text-gray-800 text-sm flex items-center justify-center mx-auto transition-colors bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-full font-medium">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            Escrutinio Final
+        </button>
+    </footer>
+
+    <!-- ================= MODALES ================= -->
+
+    <!-- Modal: Confirmar Voto -->
+    <div id="modalConfirmar" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full modal-enter shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Confirmar Voto</h3>
+            <p class="text-gray-600 text-center mb-4">¿Estás seguro de que deseas emitir tu voto por <span id="opcionConfirmar" class="font-bold text-gray-900"></span>?</p>
+            
+            <div class="mb-6">
+                <label for="inputDNI" class="block text-sm font-medium text-gray-700 mb-2">Ingresa tu DNI para confirmar:</label>
+                <input type="number" id="inputDNI" placeholder="Ej: 45123456" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                <p id="errorDNI" class="text-red-500 text-sm hidden mt-2"></p>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="cerrarModal('modalConfirmar')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-xl transition-colors">Cancelar</button>
+                <button id="btnEmitirVoto" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors">Sí, votar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Mensaje Éxito -->
+    <div id="modalExito" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full modal-enter shadow-2xl text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">¡Voto Registrado!</h3>
+            <p class="text-gray-600 mb-6">Tu voto ha sido emitido y guardado exitosamente.</p>
+            <button onclick="cerrarModal('modalExito')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors">Finalizar</button>
+        </div>
+    </div>
+
+    <!-- Modal: Contraseña Escrutinio -->
+    <div id="modalPassword" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-sm w-full modal-enter shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-2 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                Acceso a Escrutinio
+            </h3>
+            <p class="text-gray-500 text-sm mb-4">Ingresa la contraseña de administrador para ver los resultados.</p>
+            <input type="password" id="inputPassword" placeholder="Contraseña..." class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-4 transition-all">
+            <p id="errorPassword" class="text-red-500 text-sm hidden mb-4">Contraseña incorrecta.</p>
+            <div class="flex gap-4">
+                <button onclick="cerrarModal('modalPassword')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-xl transition-colors">Cancelar</button>
+                <button onclick="verificarPassword()" class="flex-1 bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-xl transition-colors">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Resultados Escrutinio -->
+    <div id="modalResultados" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full modal-enter shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">Resultados Finales</h3>
+                <button onclick="cerrarModal('modalResultados')" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-2">Total de votos emitidos:</p>
+                <p id="totalVotos" class="text-3xl font-black text-blue-600">0</p>
+            </div>
+
+            <div id="contenedorResultados" class="space-y-4">
+                <!-- Los resultados se inyectan aquí con JS -->
+            </div>
+            
+            <button onclick="cerrarModal('modalResultados')" class="w-full mt-8 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-xl transition-colors">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- ================= LOGICA JAVASCRIPT ================= -->
+    <script>
+        // =========================================================================
+        // CONFIGURACIÓN DE GOOGLE SHEETS
+        // Reemplaza esta URL con la URL de tu Google Apps Script (Ver instrucciones)
+        // =========================================================================
+        const GOOGLE_SCRIPT_URL = ''; 
+        
+        let opcionSeleccionada = '';
+
+        // Funciones de control de Modales
+        function abrirModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // Proceso de votación
+        function confirmarVoto(opcion) {
+            opcionSeleccionada = opcion;
+            document.getElementById('opcionConfirmar').innerText = opcion;
+            
+            // Si es lista roja o verde, dar color al texto para mejor UX
+            const spanConfirmar = document.getElementById('opcionConfirmar');
+            spanConfirmar.className = 'font-bold ';
+            if(opcion === 'Lista Roja') spanConfirmar.classList.add('text-red-600');
+            else if(opcion === 'Lista Verde') spanConfirmar.classList.add('text-green-600');
+            else spanConfirmar.classList.add('text-gray-600');
+
+            // Limpiar campo DNI al abrir el modal
+            document.getElementById('inputDNI').value = '';
+            document.getElementById('errorDNI').classList.add('hidden');
+
+            abrirModal('modalConfirmar');
+        }
+
+        document.getElementById('btnEmitirVoto').addEventListener('click', async () => {
+            const dniInput = document.getElementById('inputDNI').value.trim();
+            const errorDNI = document.getElementById('errorDNI');
+
+            // Validar DNI
+            if (!dniInput || dniInput.length < 7 || dniInput.length > 8 || isNaN(dniInput)) {
+                errorDNI.innerText = "Por favor, ingresa un DNI válido (7 u 8 números).";
+                errorDNI.classList.remove('hidden');
+                return;
+            }
+
+            // Validar si el DNI ya votó localmente
+            let votos = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
+            if (votos.some(v => v.dni === dniInput)) {
+                errorDNI.innerText = "Este DNI ya ha registrado un voto.";
+                errorDNI.classList.remove('hidden');
+                return;
+            }
+
+            cerrarModal('modalConfirmar');
+            
+            // 1. Guardado Local (Para que el escrutinio funcione inmediatamente sin el script de Google)
+            guardarVotoLocal(opcionSeleccionada, dniInput);
+
+            // 2. Guardado en Google Sheets (Si la URL está configurada)
+            if (GOOGLE_SCRIPT_URL !== '') {
+                try {
+                    const formData = new FormData();
+                    formData.append('dni', dniInput);
+                    formData.append('voto', opcionSeleccionada);
+                    formData.append('fecha', new Date().toLocaleString());
+                    
+                    // fetch con no-cors para evitar bloqueos del navegador en Vercel
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        body: formData
+                    });
+                } catch (error) {
+                    console.error("Error al enviar a Google Sheets:", error);
+                }
+            }
+            
+            abrirModal('modalExito');
+        });
+
+        function guardarVotoLocal(opcion, dni) {
+            let votos = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
+            votos.push({ dni: dni, opcion: opcion, fecha: new Date().toISOString() });
+            localStorage.setItem('votos_mariano_moreno', JSON.stringify(votos));
+        }
+
+        // Proceso de Escrutinio
+        function abrirModalPassword() {
+            document.getElementById('inputPassword').value = '';
+            document.getElementById('errorPassword').classList.add('hidden');
+            abrirModal('modalPassword');
+        }
+
+        function verificarPassword() {
+            const pwd = document.getElementById('inputPassword').value;
+            if (pwd === 'Escrutinio2026') {
+                cerrarModal('modalPassword');
+                generarEscrutinio();
+            } else {
+                document.getElementById('errorPassword').classList.remove('hidden');
+            }
+        }
+
+        function generarEscrutinio() {
+            // Obtenemos los votos locales
+            const votos = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
+            
+            // Conteo
+            const conteo = {
+                'Lista Roja': 0,
+                'Lista Verde': 0,
+                'Voto en Blanco': 0
+            };
+
+            votos.forEach(voto => {
+                if (conteo[voto.opcion] !== undefined) {
+                    conteo[voto.opcion]++;
+                }
+            });
+
+            const total = votos.length;
+            document.getElementById('totalVotos').innerText = total;
+
+            // Ordenar de mayor a menor
+            const resultadosOrdenados = Object.keys(conteo).map(lista => {
+                return { lista: lista, votos: conteo[lista] };
+            }).sort((a, b) => b.votos - a.votos);
+
+            // Renderizar HTML
+            const contenedor = document.getElementById('contenedorResultados');
+            contenedor.innerHTML = '';
+
+            resultadosOrdenados.forEach((item, index) => {
+                let porcentaje = total === 0 ? 0 : Math.round((item.votos / total) * 100);
+                
+                // Colores dinámicos según la lista
+                let colorBarra = 'bg-gray-400';
+                let colorTexto = 'text-gray-700';
+                if (item.lista === 'Lista Roja') { colorBarra = 'bg-red-500'; colorTexto = 'text-red-700'; }
+                if (item.lista === 'Lista Verde') { colorBarra = 'bg-green-500'; colorTexto = 'text-green-700'; }
+
+                let trofeo = index === 0 && item.votos > 0 ? `<svg class="w-5 h-5 text-yellow-500 ml-2 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 01.832.445l2.454 3.75 4.384.637a1 1 0 01.554 1.706l-3.173 3.093.75 4.365a1 1 0 01-1.451 1.054L10 15.018l-3.92 2.062a1 1 0 01-1.45-1.054l.75-4.365-3.173-3.093a1 1 0 01.554-1.706l4.384-.637 2.454-3.75A1 1 0 0110 2z" clip-rule="evenodd"></path></svg>` : '';
+
+                const html = `
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="font-bold ${colorTexto} flex items-center">${item.lista} ${trofeo}</span>
+                            <span class="font-black text-xl text-gray-800">${item.votos} <span class="text-sm font-normal text-gray-500">votos</span></span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="${colorBarra} h-2.5 rounded-full transition-all duration-1000" style="width: ${porcentaje}%"></div>
+                        </div>
+                        <p class="text-right text-xs text-gray-500 mt-1">${porcentaje}%</p>
+                    </div>
+                `;
+                contenedor.innerHTML += html;
+            });
+
+            abrirModal('modalResultados');
+        }
+    </script>
+</body>
+</html>
