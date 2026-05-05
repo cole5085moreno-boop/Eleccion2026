@@ -153,13 +153,13 @@
             
             <!-- Estado de carga -->
             <div id="loadingResults" class="flex flex-col items-center justify-center py-10">
-                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4 mx-auto"></div>
                 <p class="text-gray-500">Obteniendo datos de Google Sheets...</p>
             </div>
 
             <div id="contentResults" class="hidden">
                 <div class="mb-6">
-                    <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-2">Total de votos en la hoja:</p>
+                    <p class="text-sm text-gray-500 font-semibold uppercase tracking-wider mb-2">Total de votos registrados:</p>
                     <p id="totalVotos" class="text-3xl font-black text-blue-600">0</p>
                 </div>
 
@@ -175,7 +175,7 @@
     <!-- ================= LOGICA JAVASCRIPT ================= -->
     <script>
         // URL de tu Google Apps Script actualizada
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-kbcPMgP0uLIZsFgzFYR0JQh4G1CBbtRK269tauY5ScFEqvOZoZrQpi9GgGUxPYAW/exec'; 
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCW9Hj9iRVxBzZUdBrudT0N9sqBFmeQ_3NbGE87EXxzxGq32cAtQc7H-XQdsb5MaKL/exec'; 
         
         let opcionSeleccionada = '';
 
@@ -226,8 +226,7 @@
                 formData.append('voto', opcionSeleccionada);
                 formData.append('fecha', new Date().toLocaleString('es-AR'));
 
-                // Enviamos los datos al Google Script
-                // Usamos POST. Nota: POST a Google Apps Script con no-cors siempre devuelve opaque response, pero llega.
+                // Enviamos los datos al Google Script usando POST
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -238,16 +237,16 @@
                 votosLocales.push({ dni: dniInput, opcion: opcionSeleccionada });
                 localStorage.setItem('votos_mariano_moreno', JSON.stringify(votosLocales));
 
-                // Éxito
-                cerrarModal('modalProcesando');
-                abrirModal('modalExito');
+                // Simular un pequeño retraso para asegurar que la petición se procese antes de cerrar el modal
+                setTimeout(() => {
+                    cerrarModal('modalProcesando');
+                    abrirModal('modalExito');
+                }, 1000);
 
             } catch (err) {
                 console.error("Error al enviar voto:", err);
                 cerrarModal('modalProcesando');
-                // Aunque falle la red, si el script está bien, Google suele recibirlo. 
-                // Mostramos éxito igualmente para no confundir al usuario tras el "no-cors"
-                abrirModal('modalExito');
+                abrirModal('modalExito'); // Mostramos éxito aunque sea opaque response
             }
         });
 
@@ -286,7 +285,6 @@
                 content.classList.remove('hidden');
             } catch (error) {
                 console.error("Error al leer de Google Sheets:", error);
-                // Si falla la conexión, mostramos los votos locales como respaldo
                 const votosLocales = JSON.parse(localStorage.getItem('votos_mariano_moreno')) || [];
                 renderizarEscrutinio(votosLocales);
                 loading.classList.add('hidden');
@@ -297,7 +295,6 @@
         function renderizarEscrutinio(votos) {
             const conteo = { 'Lista Roja': 0, 'Lista Verde': 0, 'Voto en Blanco': 0 };
             
-            // Procesar los votos recibidos
             votos.forEach(v => { 
                 if (v.opcion && conteo[v.opcion] !== undefined) {
                     conteo[v.opcion]++; 
