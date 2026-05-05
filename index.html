@@ -205,7 +205,7 @@
             guardarVotoLocal(opcionSeleccionada, dniInput);
 
             // 2. Guardado en Google Sheets (Si la URL está configurada)
-            if (GOOGLE_SCRIPT_URL !== '') {
+            if (GOOGLE_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbxMsGKzkKhxVU0Z8vsKwmZ1hC3dZ0dSqxj8hTHiCB-N2u71WWb0j2k-J0MlMPmrGlgg/exec') {
                 try {
                     const formData = new FormData();
                     formData.append('dni', dniInput);
