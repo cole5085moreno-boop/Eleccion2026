@@ -151,9 +151,8 @@
     <script>
         // =========================================================================
         // CONFIGURACIÓN DE GOOGLE SHEETS
-        // Reemplaza esta URL con la URL de tu Google Apps Script (Ver instrucciones)
         // =========================================================================
-        const GOOGLE_SCRIPT_URL = ''; 
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMsGKzkKhxVU0Z8vsKwmZ1hC3dZ0dSqxj8hTHiCB-N2u71WWb0j2k-J0MlMPmrGlgg/exec'; 
         
         let opcionSeleccionada = '';
 
@@ -205,22 +204,28 @@
             guardarVotoLocal(opcionSeleccionada, dniInput);
 
             // 2. Guardado en Google Sheets (Si la URL está configurada)
-            if (GOOGLE_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbxMsGKzkKhxVU0Z8vsKwmZ1hC3dZ0dSqxj8hTHiCB-N2u71WWb0j2k-J0MlMPmrGlgg/exec') {
+            if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.trim() !== '') {
                 try {
-                    const formData = new FormData();
-                    formData.append('dni', dniInput);
-                    formData.append('voto', opcionSeleccionada);
-                    formData.append('fecha', new Date().toLocaleString());
+                    // FIX: Usar URLSearchParams asegura que Apps Script lea bien "e.parameter"
+                    const params = new URLSearchParams();
+                    params.append('dni', dniInput);
+                    params.append('voto', opcionSeleccionada);
+                    params.append('fecha', new Date().toLocaleString());
                     
-                    // fetch con no-cors para evitar bloqueos del navegador en Vercel
                     fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
-                        body: formData
-                    });
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: params.toString()
+                    }).catch(err => console.error("Error en la petición a Sheets:", err));
+                    
                 } catch (error) {
                     console.error("Error al enviar a Google Sheets:", error);
                 }
+            } else {
+                console.warn("Atención: No has colocado la URL de Google Script.");
             }
             
             abrirModal('modalExito');
